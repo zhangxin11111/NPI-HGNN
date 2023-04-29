@@ -1,0 +1,10 @@
+pandas==1.4.2
+scikit-learn==1.0.2
+node2vec==0.4.4
+networkx==2.8
+numpy==1.22.3
+openpyxl==3.0.9
+torch==1.11.0
+torch-geometric==2.0.4
+
+
