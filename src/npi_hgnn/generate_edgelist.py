@@ -3,14 +3,14 @@ import argparse
 import os.path as osp
 import os
 from src.npi_hgnn.methods import read_rpi,random_negative_sampling,write_interactor,generate_pre_dataset_path
-from src.npi_hgnn.methods import fire_negative_sampling,read_sequence_file,reliable_negative_sampling,read_rrsn,case_study_sampling
+from src.npi_hgnn.methods import fire_negative_sampling,read_sequence_file,reliable_negative_sampling
 from sklearn.model_selection import StratifiedKFold,train_test_split
 import numpy as np
 import pandas as pd
 def parse_args():
     parser = argparse.ArgumentParser(description="Negative sample selection and partitioning the dataset.")
     # NPHN3265 | NPHN4158 | NPHN7317 | NPHN-Homo | NPHN-Mus
-    parser.add_argument('--dataset', default="NPHN-Mus", help='dataset name')
+    parser.add_argument('--dataset', default="NPHN7317", help='dataset name')
     # 0：RANDOM 1：FIRE 2：RelNegNPI 3、Rel&Ran
     parser.add_argument('--samplingType',default=3,type=int, help='sampling type')
     parser.add_argument('--num_fold', default=5,type=int, help='how num of fold is this')
@@ -56,10 +56,6 @@ def generate_training_and_testing(set_interaction, set_negativeInteraction,path_
         write_interactor(neg_train_edges, path_cross_valid + f'/dataset_{i}/neg_train_edges')
         write_interactor(pos_val_edges, path_cross_valid + f'/dataset_{i}/pos_val_edges')
         write_interactor(neg_val_edges, path_cross_valid + f'/dataset_{i}/neg_val_edges')
-        # catnot_use = set()
-        # catnot_use.update(pos_train_edges)
-        # catnot_use.update(neg_train_edges)
-        # catnot_use.update(pos_test_edges)
 
 
 def get_k_fold_data(k, data):
@@ -102,29 +98,23 @@ if __name__ == '__main__':
             f.write(item+'\n')
     pp_swscore_matrix = pd.read_csv(f'../../data/{args.dataset}/source_database_data/PPSM/ppsm.txt',header=None).values
     rr_swscore_matrix = pd.read_csv(f'../../data/{args.dataset}/source_database_data/RRSM/rrsm.txt',header=None).values
+    set_interaction = [(triplet[0], triplet[2]) for triplet in positive_samples.values]
+    set_interaction = set(set_interaction)
     if args.samplingType==0:
-        set_interaction = [(triplet[0], triplet[2]) for triplet in positive_samples.values]
-        set_interaction = set(set_interaction)
         set_negativeInteraction = random_negative_sampling(set_interaction, rna_name_set, protein_name_set, len(set_interaction))
-
     elif  args.samplingType==1:
-        set_interaction=positive_samples[['source','target']].values.tolist()
         Positives, Negatives = fire_negative_sampling(set_interaction, rna_name_set,protein_name_set, pp_swscore_matrix,dict_protein_name_id,len(set_interaction))
         set_interaction = set(Positives)
         set_negativeInteraction = set(Negatives)
     elif  args.samplingType==2:
-        rrsn,rna_names=read_rrsn(f'../../data/{args.dataset}/processed_database_data/{args.dataset}_RRI.xlsx')
-        set_interaction=positive_samples[['source', 'target']].values.tolist()
         Positives, Negatives = reliable_negative_sampling(set_interaction, rna_name_set,protein_name_set, pp_swscore_matrix,dict_protein_name_id,rr_swscore_matrix,dict_rna_name_id,0.5,len(set_interaction))
         set_interaction = set(Positives)
         set_negativeInteraction = set(Negatives)
     elif args.samplingType == 3:
-        rrsn,rna_names=read_rrsn(f'../../data/{args.dataset}/processed_database_data/{args.dataset}_RRI.xlsx')
-        set_interaction=positive_samples[['source', 'target']].values.tolist()
         Positives, reliable_negatives = reliable_negative_sampling(set_interaction, rna_name_set,protein_name_set, pp_swscore_matrix,dict_protein_name_id,rr_swscore_matrix,dict_rna_name_id,0.5,len(set_interaction)//2)
         set_interaction = set(Positives)
         set_negativeInteraction = set(reliable_negatives)
-        random_negatives = random_negative_sampling(set_interaction, rna_name_set, protein_name_set,len(set_interaction)//2)
+        random_negatives = random_negative_sampling(set_interaction, rna_name_set, protein_name_set,len(set_interaction)//2,case_study_neg_edges=set_negativeInteraction)
         set_negativeInteraction.update(random_negatives)
     write_interactor(set_interaction, pre_dataset_path + '/all_postitive_edges')
     write_interactor(set_negativeInteraction, pre_dataset_path + '/all_negative_edges')

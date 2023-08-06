@@ -151,3 +151,42 @@ class Model_2(torch.nn.Module):
         x = self.lin3(x)
         x = F.log_softmax(x, dim=-1)
         return x
+#NPI_GNN的网络模型
+class Model_3(torch.nn.Module):
+    def __init__(self, num_node_features, num_of_classes=2):
+        super(Model_3, self).__init__()
+        self.conv1 = SAGEConv(num_node_features, 128)
+        self.pool1 = TopKPooling(128, ratio=0.5)
+        self.conv2 = SAGEConv(128, 128)
+        self.pool2 = TopKPooling(128, ratio=0.5)
+        self.conv3 = SAGEConv(128, 128)
+        self.pool3 = TopKPooling(128, ratio=0.5)
+
+        self.lin1 = torch.nn.Linear(256, 128)
+        self.lin2 = torch.nn.Linear(128, 64)
+        self.lin3 = torch.nn.Linear(64, num_of_classes)
+
+    def forward(self, data):
+        x, edge_index, batch = data.x, data.edge_index, data.batch.to(dtype=torch.int64)
+
+        x = F.leaky_relu(self.conv1(x, edge_index))
+        x, edge_index, _, batch, _, _ = self.pool1(x, edge_index, None, batch)
+        x1 = torch.cat([global_max_pool(x, batch), global_mean_pool(x, batch)], dim=1)
+
+        x = F.leaky_relu(self.conv2(x, edge_index))
+        x, edge_index, _, batch, _, _ = self.pool2(x, edge_index, None, batch)
+        x2 = torch.cat([global_max_pool(x, batch), global_mean_pool(x, batch)], dim=1)
+
+        x = F.leaky_relu(self.conv3(x, edge_index))
+        x, edge_index, _, batch, _, _ = self.pool3(x, edge_index, None, batch)
+        x3 = torch.cat([global_max_pool(x, batch), global_mean_pool(x, batch)], dim=1)
+
+        x = x1 + x2 + x3
+
+        x = F.leaky_relu(self.lin1(x))
+        x = F.dropout(x, p=0.5, training=self.training)
+        x = F.leaky_relu(self.lin2(x))
+        x = self.lin3(x)
+        x = F.log_softmax(x, dim=-1)
+
+        return x

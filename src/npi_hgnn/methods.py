@@ -152,7 +152,7 @@ def read_rpi(npi_path):
     from sklearn.utils import shuffle
     npi_df = shuffle(npi_df)
     return npi_df,rna_name_set,protein_name_set
-def random_negative_sampling(set_interaction,rna_name_set,protein_name_set, size):
+def random_negative_sampling(set_interaction,rna_name_set,protein_name_set, size,case_study_neg_edges = None):
     set_negativeInteraction = set()
     num_of_ncRNA = len(rna_name_set)
     rna_name_list=list(rna_name_set)
@@ -168,6 +168,8 @@ def random_negative_sampling(set_interaction,rna_name_set,protein_name_set, size
         if negativeInteraction in set_interaction:
             continue
         if negativeInteraction in set_negativeInteraction:
+            continue
+        if case_study_neg_edges!=None and negativeInteraction in case_study_neg_edges:
             continue
         set_negativeInteraction.add(negativeInteraction)
         negative_interaction_count = negative_interaction_count + 1
@@ -807,7 +809,7 @@ def fire_negative_sampling (positive_samples, RNA_list, protein_list,swscore_mat
     for rna in RNA_list:
         for protein in protein_list:
             sample = [rna, protein]
-            if [rna, protein] in positive_samples:
+            if (rna, protein) in positive_samples:
                 Ms = 1
                 sample.append(Ms)
                 Positives.append(tuple(sample))
@@ -817,14 +819,16 @@ def fire_negative_sampling (positive_samples, RNA_list, protein_list,swscore_mat
                 Negatives.append(tuple(sample))
     Negatives = sorted(Negatives, key=lambda x: x[2])
     Negatives=Negatives[:size]
+    Negatives = [(i[0],i[1]) for i in Negatives]
+    Positives = [(i[0],i[1]) for i in Positives]
     return Positives, Negatives
 def reliable_negative_sampling (positive_samples, RNA_list, protein_list,pp_swscore_matrix,dict_protein_name_id,rr_swscore_matrix,dict_rna_name_id,ratio,size):
     Positives = []
     Negatives = []
     for rna in RNA_list:
         for protein in protein_list:
-            sample = [rna, protein]
-            if [rna, protein] in positive_samples:
+            sample = (rna, protein)
+            if sample in positive_samples:
                 Ms = 1
                 sample.append(Ms)
                 Positives.append(tuple(sample))
@@ -835,6 +839,8 @@ def reliable_negative_sampling (positive_samples, RNA_list, protein_list,pp_swsc
                 Negatives.append(tuple(sample))
     Negatives = sorted(Negatives, key=lambda x: x[2])
     Negatives=Negatives[:size]
+    Negatives = [(i[0],i[1]) for i in Negatives]
+    Positives = [(i[0],i[1]) for i in Positives]
     return Positives, Negatives
 def case_study_sampling (positive_samples, RNA_list, protein_list,pp_swscore_matrix,dict_protein_name_id,rr_swscore_matrix,dict_rna_name_id,ratio,size):
     case_study_edges = []

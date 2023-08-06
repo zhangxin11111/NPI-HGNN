@@ -6,16 +6,18 @@ import os
 import time
 from torch_geometric.data import DataLoader
 import torch.nn.functional as F
-from src.npi_hgnn.model_classes import Model_1,Model_2
+from src.npi_hgnn.model_classes import Model_1,Model_2,Model_3
 def parse_args():
     parser = argparse.ArgumentParser(description="train.")
+    # NPHN3265 | NPHN4158 | NPHN7317 | NPHN-Homo | NPHN-Mus
+    parser.add_argument('--dataset', default="NPHN3265", help='dataset name')
     parser.add_argument('--epochNumber', default=100, type=int, help='number of training epoch')
     parser.add_argument('--initialLearningRate', default=0.001, type=float, help='Initial learning rate')
     parser.add_argument('--l2WeightDecay', default=0.001, type=float, help='L2 weight')
     parser.add_argument('--batchSize', default=32, type=int, help='batch size')
     parser.add_argument('--num_bases', default=2, type=int, help='Number of bases used for basis-decomposition')
     parser.add_argument('--num_relations', default=3, type=int, help='Number of edges')
-    parser.add_argument('--model_code', default=2, type=int, help='model code') # 1 2
+    parser.add_argument('--model_code', default=1, type=int, help='model code') # 1 3
     parser.add_argument('--cuda_code', default=0, type=int, help='cuda code')
     parser.add_argument('--droupout_ratio', default=0.5, type=float, help='droupout_ratio')
     parser.add_argument('--gamma', default=0.95, type=float, help='gamma')
@@ -95,7 +97,7 @@ def Accuracy_Precision_Sensitivity_Specificity_MCC(model, loader, device,log_pat
     return Accuracy, Precision, Sensitivity, Specificity, MCC
 if __name__ == "__main__":
     args = parse_args()
-    projectName = 'NPHN7317'
+    projectName = args.dataset
     print(args)
     case_study_path = f'../../data/{projectName}/case_study'
     case_study_train_path=f'{case_study_path}/train_dataset'
@@ -125,7 +127,7 @@ if __name__ == "__main__":
     model_saving_path=f'{case_study_path}/model'
     if not osp.exists(model_saving_path):
         os.makedirs(model_saving_path)
-    if args.model_code==1:
+    if args.model_code==3:
         model = globals()[f'Model_{args.model_code}'](train_dataset.num_node_features, 2).to(device)
     else:
         model = globals()[f'Model_{args.model_code}'](train_dataset.num_node_features, args.num_relations,args.num_bases, 2).to(device)
@@ -176,7 +178,7 @@ if __name__ == "__main__":
             Sen_MCC_max = Sensitivity
             Spe_MCC_max = Specificity
             early_stop = 0
-            network_model_path = model_saving_path + f'/{epoch + 1}'
+            network_model_path = model_saving_path + f'/model_{args.model_code}.pth'
             torch.save(model.state_dict(), network_model_path)
         else:
             early_stop += 1
@@ -191,4 +193,3 @@ if __name__ == "__main__":
     print('Time consuming:', end_time - start_time)
     write_log(log_path,'Time consuming:' + str(end_time - start_time) + '\n')
     print('\nexit\n')
-    from sklearn.model_selection import cross_val_score

@@ -30,7 +30,7 @@ if __name__ == "__main__":
     args=parse_args()
     pre_dataset_path=generate_pre_dataset_path(args.dataset,args.samplingType)
     node_path=generate_node_path(args.dataset,args.samplingType,args.nodeVecType)
-    rpin, rna_names1, protein_names1 = read_rpin(f'{pre_dataset_path}/dataset_{args.fold}/pos_train_edges')
+    rpin, _, _ = read_rpin(f'{pre_dataset_path}/dataset_{args.fold}/pos_train_edges')
     ppin,_=read_ppin(f'../../data/{args.dataset}/processed_database_data/{args.dataset}_PPI.xlsx')
     rrsn,_=read_rrsn(f'../../data/{args.dataset}/processed_database_data/{args.dataset}_RRI.xlsx')
     rna_vec_path = f'{node_path}/node_vec/{args.fold}/rna_vec.txt'

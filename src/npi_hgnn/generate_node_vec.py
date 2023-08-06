@@ -47,7 +47,6 @@ if __name__ == '__main__':
 		lines = f.readlines()
 		for line in lines:
 			node_names.append(line.strip())
-	node_name_vec_dict = dict(zip(node_names, range(len(node_names))))
 	graph_path = f'{pre_dataset_path}/dataset_{args.fold}/pos_train_edges'
 	if args.subgraph_type==2:
 		G, rna_names, protein_names = read_rpin(graph_path)

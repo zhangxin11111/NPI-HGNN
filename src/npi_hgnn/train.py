@@ -6,7 +6,7 @@ import os
 import time
 from torch_geometric.data import DataLoader
 import torch.nn.functional as F
-from src.npi_hgnn.model_classes import Model_1,Model_2
+from src.npi_hgnn.model_classes import Model_1,Model_2,Model_3
 from src.npi_hgnn.methods import generate_dataset_path,generate_log_path,generate_model_path
 def generate_result_path(dataset,nodeVecType,subgraph_type,samplingType):
     path=f'../../data/result/{dataset}'
@@ -239,8 +239,10 @@ if __name__ == "__main__":
         os.makedirs(model_saving_path)
     if(train_dataset.num_node_features != test_dataset.num_node_features):
         raise Exception('The node feature dimensions of training set and test set are inconsistent')
-    model = globals()[f'Model_{args.model_code}'](train_dataset.num_node_features, args.num_relations, args.num_bases,2).to(device)
-
+    if args.model_code==3:
+        model = globals()[f'Model_{args.model_code}'](train_dataset.num_node_features, 2).to(device)
+    else:
+        model = globals()[f'Model_{args.model_code}'](train_dataset.num_node_features, args.num_relations,args.num_bases, 2).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=L2_weight_decay)
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=args.gamma)
     print(f'number of samples in training dataset：{str(len(train_dataset))}\n')
@@ -289,7 +291,7 @@ if __name__ == "__main__":
             Sen_MCC_max = Sensitivity
             Spe_MCC_max = Specificity
             early_stop = 0
-            network_model_path = model_saving_path + f'/{epoch + 1}'
+            network_model_path = model_saving_path + f'/model_{args.model_code}.pth'
             torch.save(model.state_dict(), network_model_path)
         else:
             early_stop += 1
@@ -300,7 +302,7 @@ if __name__ == "__main__":
     print(output)
     write_log(log_path, output + '\n')
 
-    model.load_state_dict(torch.load(model_saving_path + f'/{epoch_MCC_max}'))
+    model.load_state_dict(torch.load(model_saving_path + f'/model_{args.model_code}.pth'))
     Accuracy, Precision, Sensitivity, Specificity, MCC,pred = Accuracy_Precision_Sensitivity_Specificity_MCC_Pred(model,test_loader,device)
     output = 'test dataset, Accuracy: {:.5f}, Precision: {:.5f}, Sensitivity: {:.5f}, Specificity: {:.5f}, MCC: {:.5f}'.format(
          Accuracy, Precision, Sensitivity, Specificity, MCC)

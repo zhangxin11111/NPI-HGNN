@@ -6,7 +6,7 @@ import numpy as np
 def parse_args():
     parser = argparse.ArgumentParser(description="generate word2vec")
     # NPHN3265 | NPHN4158 | NPHN7317 | NPHN-Homo | NPHN-Mus
-    parser.add_argument('--dataset', default="NPHN-Mus", help='dataset name')
+    parser.add_argument('--dataset', default="NPHN7317", help='dataset name')
     return parser.parse_args()
 def read_k_mer_file(path):
 
