@@ -830,13 +830,13 @@ def reliable_negative_sampling (positive_samples, RNA_list, protein_list,pp_swsc
             sample = (rna, protein)
             if sample in positive_samples:
                 Ms = 1
-                sample.append(Ms)
-                Positives.append(tuple(sample))
+                sample=(rna,protein,Ms)
+                Positives.append(sample)
             else:
                 protein_score,rna_score = calculate_rna_protein_similatity_plus(rna, protein, positive_samples,pp_swscore_matrix,dict_protein_name_id,rr_swscore_matrix,dict_rna_name_id)
                 Ms=ratio*protein_score+(1-ratio)*rna_score
-                sample.append(Ms)
-                Negatives.append(tuple(sample))
+                sample=(rna,protein,Ms)
+                Negatives.append(sample)
     Negatives = sorted(Negatives, key=lambda x: x[2])
     Negatives=Negatives[:size]
     Negatives = [(i[0],i[1]) for i in Negatives]

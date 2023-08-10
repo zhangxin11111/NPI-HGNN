@@ -8,7 +8,7 @@ import pandas as pd
 def parse_args():
     parser = argparse.ArgumentParser(description="Negative sample selection and partitioning the dataset.")
     # NPHN3265 | NPHN4158 | NPHN7317 | NPHN-Homo | NPHN-Mus
-    parser.add_argument('--dataset', default="NPHN3265", help='dataset name')
+    parser.add_argument('--dataset', default="NPHN7317", help='dataset name')
     # 0：RANDOM 1：FIRE 2：RelNegNPI 3、Rel&Ran
     parser.add_argument('--samplingType',default=3,type=int, help='sampling type')
     return parser.parse_args()
